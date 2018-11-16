@@ -19,10 +19,11 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Random;
 
 public class DisplayWindow extends Application
 {
+
+    // TODO: resize images so they fit on the screen
 
     private final static ArrayList<String> images = loadImages();
 
@@ -38,8 +39,7 @@ public class DisplayWindow extends Application
         final int IMAGE_WIDTH = 400;
 
         // 2, 5, 9
-        Random r = new Random();
-        MyImage image = new MyImage(images.get(r.nextInt(10)));
+        MyImage image = new MyImage(images.get(5));
 
         ImageView topLeftImg = new ImageView();
         topLeftImg.setImage(image.getImage());
@@ -107,7 +107,6 @@ public class DisplayWindow extends Application
         list.add(new File("src/happy-cartoon-whale-sun-cloud-23624490.jpg").toURI().toString());
         list.add("http://www.cs.utah.edu/~sshankar/cs6640/project5/images/circle/pattern.png");
         list.add("https://5.imimg.com/data5/XX/SM/MY-32940434/dvd-branding-250x250.jpg");
-        list.add(new File("src/WIN_20181116_13_15_07_Pro.jpg").toURI().toString());
         return list;
     }
 
