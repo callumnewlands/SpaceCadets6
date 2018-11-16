@@ -6,7 +6,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
-import java.util.ArrayList;
+
+
 
 public class MyImage
 {
@@ -86,93 +87,6 @@ public class MyImage
         return this.img;
     }
 
-    public MyImage getCircledVersion(int minimumRadius, int threshold, ImageView accumulatorImageView)
-    {
-        BufferedImage edged = this.getEdgedVersion(0).getBufferedImage();
-        MyImage circled = new MyImage(this.getBufferedImage());
-        BufferedImage accumulatorImage = new BufferedImage(this.getWidth(), this.getHeight(), BufferedImage.TYPE_INT_RGB);
-
-        final int magnitudeThreshold = 150;
-
-        final int maxRadius = this.getWidth() / 2;
-        int[][][] accumulator = new int[this.getWidth()][this.getHeight()][maxRadius];
-        int[] currentHighestAccumulator = {0, 0, 0, 0};
-
-        for (int x = 0; x < this.getWidth(); x++) {
-            System.out.printf("%d / %d %n", x, this.getWidth());
-            //System.out.printf("%f%% %n", Math.round(((float)x / this.getWidth()) * 100.0) / 100.0);
-            for (int y = 0; y < this.getHeight(); y++) {
-                if (new Color(edged.getRGB(x, y)).getRed() > magnitudeThreshold) {
-                    for (int radius = minimumRadius; radius < maxRadius; radius++) {
-                        for (int theta = 0; theta < 360; theta++) {
-
-                            int a = x + (int)(radius * Math.cos(Math.toRadians(theta)));
-                            int b = y + (int)(radius * Math.sin(Math.toRadians(theta)));
-
-                            try {
-                                accumulator[a][b][radius] += 1;
-                                int currentVote = accumulator[a][b][radius];
-                                if (currentVote > currentHighestAccumulator[3]) {
-                                    currentHighestAccumulator[0] = a;
-                                    currentHighestAccumulator[1] = b;
-                                    currentHighestAccumulator[2] = radius;
-                                    currentHighestAccumulator[3] = currentVote;
-                                }
-                            }
-                            catch (IndexOutOfBoundsException e) {}
-                        }
-                    }
-                }
-            }
-        }
-
-        int xCentre = currentHighestAccumulator[0];
-        int yCentre = currentHighestAccumulator[1];
-        int radius = currentHighestAccumulator[2];
-
-
-        //TODO remove this:
-        for (int x = 0; x < this.getWidth(); x++)
-        {
-            //System.out.printf("%d / %d %n", x, this.getWidth());
-            for (int y = 0; y < this.getHeight(); y++)
-            {
-                //System.out.println(accumulator[x][y][radius])
-                if (!(new Color(edged.getRGB(x, y)).getRed() > magnitudeThreshold)) {
-                    accumulatorImage.setRGB(x, y, Color.HSBtoRGB(accumulator[x][y][radius] / 100.0f, 1.0f, 1.0f));
-                } else {
-                    accumulatorImage.setRGB(x, y, Color.WHITE.getRGB());
-                }
-            }
-        }
-
-        final int CIRCLE_WIDTH = 2;
-
-        for (int theta = 0; theta < 360; theta++) {
-            try {
-                for (int i = -CIRCLE_WIDTH; i < CIRCLE_WIDTH; i++) {
-                    int a = xCentre + (int) ((radius + i) * Math.cos(Math.toRadians(theta)));
-                    int b = yCentre + (int) ((radius + i) * Math.sin(Math.toRadians(theta)));
-
-                    circled.getBufferedImage().setRGB(a, b, Color.GREEN.getRGB());
-                }
-            }
-            catch (IndexOutOfBoundsException e) {}
-        }
-
-//        final int POINT_RADIUS = 3;
-//
-//        for (int i = -POINT_RADIUS; i < POINT_RADIUS; i++) {
-//            for (int j = -POINT_RADIUS; j < POINT_RADIUS; j++) {
-//                circled.getBufferedImage().setRGB(xCentre + i, yCentre + j, Color.BLACK.getRGB());
-//            }
-//        }
-
-        accumulatorImageView.setImage(SwingFXUtils.toFXImage(accumulatorImage, null));
-        return circled;
-    }
-
-
     // if threshold = 0, do not threshold the image
     public MyImage getEdgedVersion(int threshold)
     {
@@ -217,5 +131,87 @@ public class MyImage
         return new MyImage(newImage);
 
     }
+
+    public MyImage getCircledVersion(int minimumRadius, int threshold, ImageView accumulatorImageView)
+    {
+
+        // TODO reduce image resolution before finding circles to speed it up
+
+        BufferedImage edged = this.getEdgedVersion(0).getBufferedImage();
+        MyImage circled = new MyImage(this.getBufferedImage());
+        BufferedImage accumulatorImage = new BufferedImage(this.getWidth(), this.getHeight(), BufferedImage.TYPE_INT_RGB);
+
+        final int magnitudeThreshold = 150;
+
+        final int maxRadius = this.getWidth() / 2;
+        int[][][] accumulator = new int[this.getWidth()][this.getHeight()][maxRadius];
+        int[] currentHighestAccumulator = {0, 0, 0, 0};
+        int[] secondHighestAccumulator = {0, 0, 0, 0};
+
+
+        for (int x = 0; x < this.getWidth(); x++) {
+            System.out.printf("%d / %d %n", x, this.getWidth());
+            //System.out.printf("%f%% %n", Math.round(((float)x / this.getWidth()) * 100.0) / 100.0);
+            for (int y = 0; y < this.getHeight(); y++) {
+                if (new Color(edged.getRGB(x, y)).getRed() > magnitudeThreshold) {
+                    for (int radius = minimumRadius; radius < maxRadius; radius++) {
+                        for (int theta = 0; theta < 360; theta++) {
+
+                            int a = x + (int)(radius * Math.cos(Math.toRadians(theta)));
+                            int b = y + (int)(radius * Math.sin(Math.toRadians(theta)));
+
+                            try {
+                                accumulator[a][b][radius] += 1;
+                                int currentVote = accumulator[a][b][radius];
+                                if (currentVote > currentHighestAccumulator[3]) {
+                                    currentHighestAccumulator[0] = a;
+                                    currentHighestAccumulator[1] = b;
+                                    currentHighestAccumulator[2] = radius;
+                                    currentHighestAccumulator[3] = currentVote;
+                                }
+                            }
+                            catch (IndexOutOfBoundsException e) {}
+                        }
+                    }
+                }
+            }
+        }
+
+        int radius = currentHighestAccumulator[2];
+
+        for (int x = 0; x < this.getWidth(); x++)
+        {
+            //System.out.printf("%d / %d %n", x, this.getWidth());
+            for (int y = 0; y < this.getHeight(); y++)
+            {
+                //System.out.println(accumulator[x][y][radius])
+                if (!(new Color(edged.getRGB(x, y)).getRed() > magnitudeThreshold)) {
+                    accumulatorImage.setRGB(x, y, Color.HSBtoRGB(accumulator[x][y][radius] / 100.0f, 1.0f, 1.0f));
+                } else {
+                    accumulatorImage.setRGB(x, y, Color.WHITE.getRGB());
+                }
+            }
+        }
+
+        final int CIRCLE_WIDTH = 2;
+
+        int xCentre = currentHighestAccumulator[0];
+        int yCentre = currentHighestAccumulator[1];
+
+        for (int theta = 0; theta < 360; theta++) {
+            try {
+                for (int i = -CIRCLE_WIDTH; i < CIRCLE_WIDTH; i++) {
+                    int a = xCentre + (int) ((radius + i) * Math.cos(Math.toRadians(theta)));
+                    int b = yCentre + (int) ((radius + i) * Math.sin(Math.toRadians(theta)));
+                    circled.getBufferedImage().setRGB(a, b, Color.GREEN.getRGB());
+                }
+            }
+            catch (IndexOutOfBoundsException e) {}
+        }
+
+        accumulatorImageView.setImage(SwingFXUtils.toFXImage(accumulatorImage, null));
+        return circled;
+    }
+
 
 }
